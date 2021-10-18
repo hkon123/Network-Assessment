@@ -44,4 +44,15 @@ public abstract class Connection {
 		}
 	}
 	
+	protected void sendTestPacket(int option) {
+		Packet testMsg = new Packet( 
+				destIp,
+				destPort,
+				0, //seqNr
+				10, //ackNr
+				option,  // option = hello
+				"test.txt");
+		sendPacket(testMsg);
+	}
+	
 }

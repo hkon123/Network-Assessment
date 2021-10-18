@@ -6,7 +6,7 @@ import java.util.Arrays;
 public class Packet {
 	private InetAddress destIp;
 	private int destPort;
-	private int sequenceNr, ackNr, option;
+	private int sequenceNr, ackNr, option, length;
 	private String data;
 	private byte[] raw_data;
 	private DatagramPacket datagram; 
@@ -31,6 +31,7 @@ public class Packet {
 		ackNr = ackNrIn;
 		option = optionIn;
 		data = dataIn;
+		length = data.length();
 		setRaw_data();
 		datagram = new DatagramPacket(raw_data, raw_data.length, destIp, destPort);
 	}
@@ -41,6 +42,7 @@ public class Packet {
 		baos.write((byte) sequenceNr);
 		baos.write((byte) ackNr);
 		baos.write((byte) option);
+		baos.write((byte) length);
 		try {
 			baos.write(data.getBytes());
 		} catch (IOException e) {
@@ -58,7 +60,8 @@ public class Packet {
 		sequenceNr = raw_data[0] & 0xff;
 		ackNr = raw_data[1] & 0xff;
 		option = raw_data[2] & 0xff;
-		data = new String(Arrays.copyOfRange(raw_data, 3, raw_data.length));
+		length = raw_data[3] & 0xff;
+		data = new String(Arrays.copyOfRange(raw_data, 4, 4+length));
 	}
 		
 
@@ -81,6 +84,10 @@ public class Packet {
 	public int getOption() {
 		return option;
 	}
+	
+	public int getLength() {
+		return length;
+	}
 
 	public String getData() {
 		return data;
@@ -89,5 +96,6 @@ public class Packet {
 	public DatagramPacket getDatagram() {
 		return datagram;
 	}
+	
 	
 }

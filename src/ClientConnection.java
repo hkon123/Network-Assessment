@@ -16,6 +16,7 @@ public class ClientConnection extends Connection {
 		}
 		if (establishConnection()) {
 			System.out.println("Connection established!");
+			sendTestPacket(10);
 		} 
 		else {
 			System.out.println("Connection NOT established!");
@@ -41,4 +42,7 @@ public class ClientConnection extends Connection {
 		}
 		
 	}
+	
+	
+	
 }

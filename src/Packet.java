@@ -16,16 +16,6 @@ public class Packet {
 		raw_data = new byte[1024];
 		datagram = new DatagramPacket(raw_data, raw_data.length);
 	}
-	public void stripPacket() {
-		destIp = datagram.getAddress();
-		destPort = datagram.getPort();
-		raw_data = datagram.getData();
-		
-		sequenceNr = raw_data[0] & 0xff;
-		ackNr = raw_data[1] & 0xff;
-		option = raw_data[2] & 0xff;
-		data = new String(Arrays.copyOfRange(raw_data, 3, raw_data.length));
-	}
 	
 	//use this constructor to create Packet object from raw input
 	public Packet(String destIpIn, int destPortIn, 
@@ -45,6 +35,7 @@ public class Packet {
 		datagram = new DatagramPacket(raw_data, raw_data.length, destIp, destPort);
 	}
 	
+	
 	private void setRaw_data() {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		baos.write((byte) sequenceNr);
@@ -58,6 +49,18 @@ public class Packet {
 		}
 		raw_data = baos.toByteArray();
 	}
+	
+	public void stripPacket() {
+		destIp = datagram.getAddress();
+		destPort = datagram.getPort();
+		raw_data = datagram.getData();
+		
+		sequenceNr = raw_data[0] & 0xff;
+		ackNr = raw_data[1] & 0xff;
+		option = raw_data[2] & 0xff;
+		data = new String(Arrays.copyOfRange(raw_data, 3, raw_data.length));
+	}
+		
 
 	public InetAddress getDestIp() {
 		return destIp;

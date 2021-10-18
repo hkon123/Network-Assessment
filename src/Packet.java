@@ -12,8 +12,11 @@ public class Packet {
 	private DatagramPacket datagram; 
 	
 	//Use this constructor to create Packet object from datagram
-	public Packet(DatagramPacket incomingDatagram) {
-		datagram = incomingDatagram;
+	public Packet() {
+		raw_data = new byte[1024];
+		datagram = new DatagramPacket(raw_data, raw_data.length);
+	}
+	public void stripPacket() {
 		destIp = datagram.getAddress();
 		destPort = datagram.getPort();
 		raw_data = datagram.getData();

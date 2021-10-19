@@ -9,7 +9,7 @@ public class Launch {
 		if (args[0].equals("Client")) {
 			new ClientConnection("localhost", 9876);
 		}
-		else {
+		else if (args[0].equals("Server")){
 			DatagramSocket serverSocket;
 			Packet incomingPacket = new Packet();
 			
@@ -18,8 +18,13 @@ public class Launch {
 			
 			incomingPacket.stripPacket();
 			
-			new ServerConnection(incomingPacket, serverSocket);
-			
+			new ServerConnection(incomingPacket, serverSocket);	
+		}
+		else if (args[0].equals("Test")) {
+			System.out.println(((byte) 253) & 0xff);
+			System.out.println(((byte) 254) & 0xff);
+			System.out.println(((byte) 255) & 0xff);
+			System.out.println(((byte) 257) & 0xff);
 		}
 
 	}

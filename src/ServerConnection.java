@@ -73,14 +73,29 @@ public class ServerConnection extends Connection {
 			case 11: //option: file content
 				//TODO: write to File
 				try {
-					FileWriter fWriter = new FileWriter(outputPath); //create writer object here
+					FileWriter fWriter = new FileWriter(outputPath, true); //create writer object here
 					fWriter.write(incomingData.getData());
 					fWriter.close();
 					System.out.println("Succsessfully written to file!");
-					//TODO: send back written to file OK
+					Packet fileWriteOkMsg = new Packet( 
+							destIp,
+							destPort,
+							0, //seqNr
+							10, //ackNr
+							22,  // option = File written to OK
+							"file written to OK");
+					sendPacket(fileWriteOkMsg);		
 				} catch (IOException e) {
 					System.out.println("Could not write to file. send filename before content");
 					//TODO: send back error code that file could not be written to
+					Packet fileWriteErrorMsg = new Packet( 
+							destIp,
+							destPort,
+							0, //seqNr
+							10, //ackNr
+							23,  // option = File written to OK
+							"file write ERROR");
+					sendPacket(fileWriteErrorMsg);	
 				}
 				break;
 			default:

@@ -22,6 +22,8 @@ public class ClientConnection extends Connection {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			sendCloseConnection();
+			
 		} 
 		else {
 			System.out.println("Connection NOT established!");
@@ -68,6 +70,7 @@ public class ClientConnection extends Connection {
 			switch (serverResponse.getOption()) {
 			case 20: //file was created on server
 				sendFileContent(numberOfRemaingPackets, fileReader, fileChecker);
+				System.out.println("Full file transfered ok");
 				fileReader.close();
 				fileChecker.close();
 				break;
@@ -92,15 +95,21 @@ public class ClientConnection extends Connection {
 
 	private void sendFileContent(int numberOfRemaingPackets, Scanner fileReader, Scanner fileChecker) {
 		int dataSize;
+		int resendAttempts = 5;
+		int temp = 0;
+		boolean resend = true;
 		System.out.println("File name transfered OK");
-		dataSize = MAX_DATA - fileChecker.nextLine().length();
+		temp = fileChecker.nextLine().length();
 		while (numberOfRemaingPackets>0) {
+			dataSize = MAX_DATA - temp;
+			resend = true;
 			String dataLine = "";
 			while(fileReader.hasNextLine() 
 					&& dataSize > 0) {
 				dataLine = dataLine.concat(fileReader.nextLine() + "\n");
 				if (fileChecker.hasNextLine()) {
-					dataSize = dataSize - fileChecker.nextLine().length();
+					temp = fileChecker.nextLine().length();
+					dataSize = dataSize - temp;
 				}
 				else break;
 			}
@@ -111,8 +120,31 @@ public class ClientConnection extends Connection {
 					10, //ackNr
 					11,  // option = file content
 					dataLine);
-			sendPacket(sendFileDataMsg);
-			numberOfRemaingPackets--;
+			while (resend == true && resendAttempts > 0) {
+				sendPacket(sendFileDataMsg);
+				Packet serverResponse = receivePacket(10000);
+				switch (serverResponse.getOption()) {
+				case 22:
+					System.out.println("data line transfered OK");
+					numberOfRemaingPackets--;
+					resend = false;
+					break;
+				case 23:
+					resendAttempts--;
+					System.out.println("There was an error when the server attempted to write to file, re-sending");
+					System.out.println(resendAttempts + " resend attempts remaining");
+					break;
+				case 50:
+					resendAttempts--;
+					System.out.println(resendAttempts + " resend attempts remaining");
+					break;
+				default:
+					System.out.println("Unrecognized option");
+					resend = false;
+					sendCloseConnection();
+					break;
+				}
+			}
 		}
 	}
 	

@@ -7,7 +7,7 @@ public abstract class Connection {
 	protected String destIp;
 	protected int destPort, currentSequenceNumber, currentAckNumber;
 	protected DatagramSocket listeningSocket;
-	protected final int MAX_DATA = 1024 - 10;
+	protected final int MAX_DATA = 200;//1024 - 10;
 	
 	protected Packet receivePacket(int timeout) {
 		Packet incomingPacket = new Packet();

@@ -17,14 +17,16 @@ public class ServerConnection extends Connection {
 			listeningSocket = listeningSocketIn;
 			destIp = establishingPacket.getDestIp().toString().substring(1);
 			destPort = establishingPacket.getDestPort();
-			Packet establishedMsg = new Packet( 
+			currentSequenceNumber = establishingPacket.getAckNr();
+			currentAckNumber = establishingPacket.getSequenceNr() + 1;
+			currentSendingPacket = new Packet( 
 					destIp,
 					destPort,
 					0, //seqNr
 					10, //ackNr
 					2,  // option = Established
 					"Established");
-			sendPacket(establishedMsg);
+			sendPacket();
 			
 			readyToRecieve();
 			
@@ -42,26 +44,26 @@ public class ServerConnection extends Connection {
 					File outputFile = new File(outputPath);
 					if (outputFile.createNewFile()) {
 						System.out.println("Output file created: " + outputFile.getName());
-						Packet fileNameOkMsg = new Packet( 
+						currentSendingPacket = new Packet( 
 								destIp,
 								destPort,
-								0, //seqNr
-								10, //ackNr
+								2, //seqNr
+								3, //ackNr
 								20,  // option = File created OK
 								"file created OK");
-						sendPacket(fileNameOkMsg);
+						sendPacket();
 					}
 					else {
 						System.out.println("The output file already exists");
 						//TODO: send back error code that the output file already exists
-						Packet fileExistsMsg = new Packet( 
+						currentSendingPacket = new Packet( 
 								destIp,
 								destPort,
 								0, //seqNr
 								10, //ackNr
 								21,  // option = File already exists
 								"file already exists");
-						sendPacket(fileExistsMsg);
+						sendPacket();
 					}
 				} catch (IOException e) {
 				      System.out.println("An error occurred when creating output file.");
@@ -77,25 +79,25 @@ public class ServerConnection extends Connection {
 					fWriter.write(incomingData.getData());
 					fWriter.close();
 					System.out.println("Succsessfully written to file!");
-					Packet fileWriteOkMsg = new Packet( 
+					currentSendingPacket = new Packet( 
 							destIp,
 							destPort,
 							0, //seqNr
 							10, //ackNr
 							22,  // option = File written to OK
 							"file written to OK");
-					sendPacket(fileWriteOkMsg);		
+					sendPacket();		
 				} catch (IOException e) {
 					System.out.println("Could not write to file. send filename before content");
 					//TODO: send back error code that file could not be written to
-					Packet fileWriteErrorMsg = new Packet( 
+					currentSendingPacket = new Packet( 
 							destIp,
 							destPort,
 							0, //seqNr
 							10, //ackNr
 							23,  // option = File written to OK
 							"file write ERROR");
-					sendPacket(fileWriteErrorMsg);	
+					sendPacket();	
 				}
 				break;
 			default:

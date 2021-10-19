@@ -32,14 +32,14 @@ public class ClientConnection extends Connection {
 	}
 	
 	private boolean establishConnection() {
-		Packet helloMsg = new Packet( 
+		currentSendingPacket = new Packet( 
 				destIp,
 				destPort,
 				0, //seqNr
 				10, //ackNr
 				1,  // option = hello
 				"Hello");
-		sendPacket(helloMsg);
+		sendPacket();
 		Packet serverResponse = receivePacket(10000);
 		if( serverResponse.getOption() != 2 ) {
 			return false;
@@ -53,19 +53,18 @@ public class ClientConnection extends Connection {
 	private boolean transferFile(String filePath) throws Exception {
 		File inputFile = new File(filePath);
 		int numberOfRemaingPackets = ((int) inputFile.length() + MAX_DATA - 1)/MAX_DATA; //Rounding up
-		int dataSize;
 		if (inputFile.exists()) {
 			Scanner fileReader = new Scanner(inputFile);
 			Scanner fileChecker = new Scanner(inputFile);
 			String fileName = filePath.split("/")[filePath.split("/").length-1];
-			Packet sendFileNameMsg = new Packet( 
+			currentSendingPacket = new Packet( 
 					destIp,
 					destPort,
 					0, //seqNr
 					10, //ackNr
 					10,  // option = filename
 					fileName);
-			sendPacket(sendFileNameMsg);
+			sendPacket();
 			Packet serverResponse = receivePacket(10000);
 			switch (serverResponse.getOption()) {
 			case 20: //file was created on server
@@ -113,7 +112,7 @@ public class ClientConnection extends Connection {
 				}
 				else break;
 			}
-			Packet sendFileDataMsg = new Packet( 
+			currentSendingPacket = new Packet( 
 					destIp,
 					destPort,
 					0, //seqNr
@@ -121,7 +120,7 @@ public class ClientConnection extends Connection {
 					11,  // option = file content
 					dataLine);
 			while (resend == true && resendAttempts > 0) {
-				sendPacket(sendFileDataMsg);
+				sendPacket();
 				Packet serverResponse = receivePacket(10000);
 				switch (serverResponse.getOption()) {
 				case 22:
@@ -149,14 +148,14 @@ public class ClientConnection extends Connection {
 	}
 	
 	private void sendCloseConnection() {
-		Packet closeMsg = new Packet( 
+		currentSendingPacket = new Packet( 
 				destIp,
 				destPort,
 				0, //seqNr
 				10, //ackNr
 				51,  // option = close connection
 				"Close");
-		sendPacket(closeMsg);
+		sendPacket();
 	}
 	
 }

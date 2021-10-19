@@ -32,15 +32,19 @@ public class Packet {
 		option = optionIn;
 		data = dataIn;
 		length = data.length();
-		setRaw_data();
-		datagram = new DatagramPacket(raw_data, raw_data.length, destIp, destPort);
+		//setRaw_data();
+		//datagram = new DatagramPacket(raw_data, raw_data.length, destIp, destPort);
 	}
 	
 	
-	private void setRaw_data() {
+	public void setRaw_data() {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		baos.write((byte) sequenceNr);
+		int temp = sequenceNr/256;
+		baos.write((byte) temp);
 		baos.write((byte) ackNr);
+		temp = ackNr/256;
+		baos.write((byte) temp);
 		baos.write((byte) option);
 		baos.write((byte) length);
 		try {
@@ -50,6 +54,7 @@ public class Packet {
 			e.printStackTrace();
 		}
 		raw_data = baos.toByteArray();
+		datagram = new DatagramPacket(raw_data, raw_data.length, destIp, destPort);
 	}
 	
 	public void stripPacket() {
@@ -58,10 +63,12 @@ public class Packet {
 		raw_data = datagram.getData();
 		
 		sequenceNr = raw_data[0] & 0xff;
-		ackNr = raw_data[1] & 0xff;
-		option = raw_data[2] & 0xff;
-		length = raw_data[3] & 0xff;
-		data = new String(Arrays.copyOfRange(raw_data, 4, 4+length));
+		sequenceNr = sequenceNr + (raw_data[1] & 0xff) * 256;
+		ackNr = raw_data[2] & 0xff;
+		ackNr = ackNr + (raw_data[3] & 0xff) * 256;
+		option = raw_data[4] & 0xff;
+		length = raw_data[5] & 0xff;
+		data = new String(Arrays.copyOfRange(raw_data, 6, 6+length));
 	}
 		
 
@@ -97,5 +104,13 @@ public class Packet {
 		return datagram;
 	}
 	
+	public void setSequenceNr(int seqNr) {
+		//System.out.println("Before: " + sequenceNr);
+		sequenceNr = seqNr;
+		//System.out.println("After: " + getSequenceNr());
+	}
 	
+	public void setAckNr(int ackNrIn) {
+		ackNr = ackNrIn;
+	}
 }

@@ -24,7 +24,8 @@ public class Launch {
 			System.out.println(((byte) 253) & 0xff);
 			System.out.println(((byte) 254) & 0xff);
 			System.out.println(((byte) 255) & 0xff);
-			System.out.println(((byte) 257) & 0xff);
+			System.out.println(((byte) 257) & 0xff + (257/256)*256);
+			System.out.println(255/256);
 		}
 
 	}

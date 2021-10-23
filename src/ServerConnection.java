@@ -3,7 +3,7 @@ import java.net.DatagramSocket;
 
 public class ServerConnection extends Connection {
 	
-	boolean validConnection;
+	boolean validConnection, once = false;
 	String outputPath = "../receiveData/";
 	
 
@@ -131,9 +131,32 @@ public class ServerConnection extends Connection {
 						"Interrupt accepted");
 				sendPacket();
 				break;
+			case 13:
+				System.out.println("Sliding window interrupted, continuing");
+				currentSWindow = sWindowSize;
+				currentSendingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						22,  // option = File written to OK
+						"Sliding window interrupted, continuing");
+				sendPacket();
+				break;
 			case 51:
 				System.out.println("Closing connection with client ip: " + destIp);
 				return;
+			case 52:
+				System.out.println("Out of sequence packet recieved, ignoring incoming.");
+				currentSendingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						22,  // option = File written to OK, use this option to trigger resend
+						"Out of sequence");
+				CheckSWindow();
+				break;
 			default:
 				System.out.println("Unrecognized option");
 			}
@@ -149,6 +172,14 @@ public class ServerConnection extends Connection {
 			currentSWindow = sWindowSize;
 		}
 		else {
+			if(currentSWindow == 3 && dropPackets == false && once == false) {
+				//TODO: make random
+				dropPackets = true;
+				once = true; // tamp value to be removed when random
+			}
+			else if (dropPackets == true) {
+				dropPackets = false;
+			}
 			currentSWindow--;
 		}
 	}

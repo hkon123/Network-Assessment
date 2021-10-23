@@ -82,31 +82,49 @@ public class ClientConnection extends Connection {
 					fileName);
 			sendPacket();
 			Packet serverResponse = receivePacket(10000);
-			switch (serverResponse.getOption()) {
-			case 20: //file was created on server
-				debugPrint("File name transfered OK");
-				sendFileContent(numberOfRemaingPackets, fileReader, fileChecker);
-				System.out.println("Full file transfered ok");
-				fileReader.close();
-				fileChecker.close();
-				break;
-			case 21: //File already exists on the server
-				System.out.println("The file you are trying to transfer already exists on the server");
-				//sendCloseConnection();
-				fileReader.close();
-				fileChecker.close();
-				//TODO: create option for deleting file on server and re-sending
-				return false;
-			default:
-				debugPrint("Unrecognized option");
+			while (true) {
+				switch (serverResponse.getOption()) {
+				case 20: //file was created on server
+					debugPrint("File name transfered OK");
+					sendFileContent(numberOfRemaingPackets, fileReader, fileChecker);
+					System.out.println("Full file transfered ok");
+					fileReader.close();
+					fileChecker.close();
+					return true;
+				case 21: //File already exists on the server
+					System.out.println("The file you are trying to transfer already exists on the server");
+					Scanner in = new Scanner(System.in);
+					while (true) {
+						System.out.println("Would you like to overwrite the file on the server?(Y/n)");
+						String answer = in.nextLine();
+						if (answer.equals("n")) {
+							fileReader.close();
+							fileChecker.close();
+							return false;
+						}
+						else if (answer.equals("Y")) {
+							currentSendingPacket = new Packet( 
+									destIp,
+									destPort,
+									0, //seqNr
+									10, //ackNr
+									14,  // option = overwrite file
+									"Overwrite file");
+							sendPacket();
+							break;
+						}
+					}
+					break;
+				default:
+					debugPrint("Unrecognized option1");
+				}
+				serverResponse = receivePacket(10000);
 			}
 		}
 		else {
 			sendCloseConnection();
 			return false;
 		}
-		return true;
-		
 	}
 
 	private void sendFileContent(int numberOfRemaingPackets, Scanner fileReader, Scanner fileChecker) {

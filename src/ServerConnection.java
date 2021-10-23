@@ -143,6 +143,23 @@ public class ServerConnection extends Connection {
 						"Sliding window interrupted, continuing");
 				sendPacket();
 				break;
+			case 14:
+				debugPrint("Overwriting file: " + outputPath.split("/")[outputPath.split("/").length-1]);
+				try {
+					new FileWriter(outputPath, false).close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				currentSendingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						20,  // option = File created OK
+						"File overwritten");
+				sendPacket();
+				break;
 			case 51:
 				System.out.println("Closing connection with client ip: " + destIp);
 				return;

@@ -84,7 +84,7 @@ public class ClientConnection extends Connection {
 			Packet serverResponse = receivePacket(10000);
 			switch (serverResponse.getOption()) {
 			case 20: //file was created on server
-				System.out.println("File name transfered OK");
+				debugPrint("File name transfered OK");
 				sendFileContent(numberOfRemaingPackets, fileReader, fileChecker);
 				System.out.println("Full file transfered ok");
 				fileReader.close();
@@ -92,13 +92,13 @@ public class ClientConnection extends Connection {
 				break;
 			case 21: //File already exists on the server
 				System.out.println("The file you are trying to transfer already exists on the server");
-				sendCloseConnection();
+				//sendCloseConnection();
 				fileReader.close();
 				fileChecker.close();
 				//TODO: create option for deleting file on server and re-sending
 				return false;
 			default:
-				System.out.println("Unrecognized option");
+				debugPrint("Unrecognized option");
 			}
 		}
 		else {
@@ -157,24 +157,24 @@ public class ClientConnection extends Connection {
 				Packet serverResponse = receivePacket(10000);
 				switch (serverResponse.getOption()) {
 				case 22:
-					System.out.println("data line transfered OK");
+					debugPrint("data line transfered OK");
 					numberOfRemaingPackets--;
 					resend = false;
 					break;
 				case 23:
 					resendAttempts--;
-					System.out.println("There was an error when the server attempted to write to file, re-sending");
-					System.out.println(resendAttempts + " resend attempts remaining");
+					debugPrint("There was an error when the server attempted to write to file, re-sending");
+					debugPrint(resendAttempts + " resend attempts remaining");
 					break;
 				case 24:
-					System.out.println("Interrupt accepted by server");
+					debugPrint("Interrupt accepted by server");
 					return;
 				case 50:
 					resendAttempts--;
-					System.out.println(resendAttempts + " resend attempts remaining");
+					debugPrint(resendAttempts + " resend attempts remaining");
 					break;
 				default:
-					System.out.println("Unrecognized option");
+					debugPrint("Unrecognized option");
 					resend = false;
 					sendCloseConnection();
 					break;

@@ -62,7 +62,7 @@ public class ServerConnection extends Connection {
 				try {
 					File outputFile = new File(outputPath);
 					if (outputFile.createNewFile()) {
-						System.out.println("Output file created: " + outputFile.getName());
+						debugPrint("Output file created: " + outputFile.getName());
 						currentSendingPacket = new Packet( 
 								destIp,
 								destPort,
@@ -74,7 +74,7 @@ public class ServerConnection extends Connection {
 						sendPacket();
 					}
 					else {
-						System.out.println("The output file already exists");
+						debugPrint("The output file already exists");
 						//TODO: send back error code that the output file already exists
 						currentSendingPacket = new Packet( 
 								destIp,
@@ -86,8 +86,8 @@ public class ServerConnection extends Connection {
 						sendPacket();
 					}
 				} catch (IOException e) {
-				      System.out.println("An error occurred when creating output file.");
-				      System.out.println("attempted path: " + outputPath);
+					debugPrint("An error occurred when creating output file.");
+					debugPrint("attempted path: " + outputPath);
 				      e.printStackTrace();
 				      //TODO: Handle error
 				}
@@ -98,7 +98,7 @@ public class ServerConnection extends Connection {
 					FileWriter fWriter = new FileWriter(outputPath, true); //create writer object here
 					fWriter.write(incomingData.getData());
 					fWriter.close();
-					System.out.println("Succsessfully written to file!");
+					debugPrint("Succsessfully written to file!");
 					currentSendingPacket = new Packet( 
 							destIp,
 							destPort,
@@ -108,7 +108,7 @@ public class ServerConnection extends Connection {
 							"file written to OK");
 					CheckSWindow();
 				} catch (IOException e) {
-					System.out.println("Could not write to file. send filename before content");
+					debugPrint("Could not write to file. send filename before content");
 					//TODO: send back error code that file could not be written to
 					currentSendingPacket = new Packet( 
 							destIp,
@@ -121,7 +121,7 @@ public class ServerConnection extends Connection {
 				}
 				break;
 			case 12:
-				System.out.println("Sliding window interrupted due to file completion!");
+				debugPrint("Sliding window interrupted due to file completion!");
 				currentSendingPacket = new Packet( 
 						destIp,
 						destPort,
@@ -132,7 +132,7 @@ public class ServerConnection extends Connection {
 				sendPacket();
 				break;
 			case 13:
-				System.out.println("Sliding window interrupted, continuing");
+				debugPrint("Sliding window interrupted, continuing");
 				currentSWindow = sWindowSize;
 				currentSendingPacket = new Packet( 
 						destIp,
@@ -147,7 +147,7 @@ public class ServerConnection extends Connection {
 				System.out.println("Closing connection with client ip: " + destIp);
 				return;
 			case 52:
-				System.out.println("Out of sequence packet recieved, ignoring incoming.");
+				debugPrint("Out of sequence packet recieved, ignoring incoming.");
 				currentSendingPacket = new Packet( 
 						destIp,
 						destPort,
@@ -158,7 +158,7 @@ public class ServerConnection extends Connection {
 				CheckSWindow();
 				break;
 			default:
-				System.out.println("Unrecognized option");
+				debugPrint("Unrecognized option");
 			}
 			
 			incomingData = receivePacket(10000);

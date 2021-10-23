@@ -11,14 +11,19 @@ public class Launch {
 		}
 		else if (args[0].equals("Server")){
 			DatagramSocket serverSocket;
-			Packet incomingPacket = new Packet();
+			
 			
 			serverSocket = new DatagramSocket(9876);
-			serverSocket.receive(incomingPacket.getDatagram());
 			
-			incomingPacket.stripPacket();
-			
-			new ServerConnection(incomingPacket, serverSocket);	
+			while(true) {
+				serverSocket.setSoTimeout(0);
+				Packet incomingPacket = new Packet();
+				System.out.println("\n\nServer online!\n\n");
+				serverSocket.receive(incomingPacket.getDatagram());
+				incomingPacket.stripPacket();
+				
+				new ServerConnection(incomingPacket, serverSocket);
+			}
 		}
 		else if (args[0].equals("Test")) {
 			System.out.println(((byte) 253) & 0xff);

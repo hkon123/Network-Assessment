@@ -5,6 +5,7 @@ public class ServerConnection extends Connection {
 	
 	boolean validConnection;
 	String outputPath = "../receiveData/";
+	
 
 	public ServerConnection( Packet establishingPacket, DatagramSocket listeningSocketIn) {
 		if (establishingPacket.getOption() != 1) {
@@ -14,6 +15,7 @@ public class ServerConnection extends Connection {
 		}
 		else {
 			validConnection = true;
+			//sWindowSize = 5;  //Temp hardcoded value
 			listeningSocket = listeningSocketIn;
 			destIp = establishingPacket.getDestIp().toString().substring(1);
 			destPort = establishingPacket.getDestPort();
@@ -27,15 +29,32 @@ public class ServerConnection extends Connection {
 					2,  // option = Established
 					"Established");
 			sendPacket();
+			Packet clientResponse = receivePacket(10000);
+			if (clientResponse.getOption() == 3) {
+				sWindowSize = Integer.parseInt(clientResponse.getData());
+				currentSendingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						4,  // option = sWindowSize is set
+						Integer.toString(sWindowSize));
+				sendPacket();
+				System.out.println("Connection established with client ip: " + destIp);
+				readyToRecieve();
+			}
+			else {
+				System.out.println("Connection attempt failed with client ip: " + destIp);
+			}
 			
-			readyToRecieve();
 			
 		}
 	}
 	
 	public void readyToRecieve() {
 		Packet incomingData = receivePacket(10000);
-		while (incomingData.getOption() != 51 && incomingData.getOption() != 50) { //option 51: EOT, 50:TO 
+		currentSWindow = sWindowSize;
+		while (incomingData.getOption() != 50) { //option 50:TimeOut 
 			switch(incomingData.getOption()) {
 			case 10: //option: fileName
 				//TODO: Add handling if filename is not received before data.
@@ -51,6 +70,7 @@ public class ServerConnection extends Connection {
 								3, //ackNr
 								20,  // option = File created OK
 								"file created OK");
+
 						sendPacket();
 					}
 					else {
@@ -86,7 +106,7 @@ public class ServerConnection extends Connection {
 							10, //ackNr
 							22,  // option = File written to OK
 							"file written to OK");
-					sendPacket();		
+					CheckSWindow();
 				} catch (IOException e) {
 					System.out.println("Could not write to file. send filename before content");
 					//TODO: send back error code that file could not be written to
@@ -97,15 +117,39 @@ public class ServerConnection extends Connection {
 							10, //ackNr
 							23,  // option = File written to OK
 							"file write ERROR");
-					sendPacket();	
+					CheckSWindow();	
 				}
 				break;
+			case 12:
+				System.out.println("Sliding window interrupted due to file completion!");
+				currentSendingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						24,  // option = Interrupt accepted
+						"Interrupt accepted");
+				sendPacket();
+				break;
+			case 51:
+				System.out.println("Closing connection with client ip: " + destIp);
+				return;
 			default:
 				System.out.println("Unrecognized option");
 			}
 			
 			incomingData = receivePacket(10000);
 				
+		}
+	}
+	
+	private void CheckSWindow() {
+		if (currentSWindow == 1) {
+			sendPacket();
+			currentSWindow = sWindowSize;
+		}
+		else {
+			currentSWindow--;
 		}
 	}
 }

@@ -47,6 +47,8 @@ public class Packet {
 		baos.write((byte) temp);
 		baos.write((byte) option);
 		baos.write((byte) length);
+		temp = length/256;
+		baos.write((byte) temp);
 		try {
 			baos.write(data.getBytes());
 		} catch (IOException e) {
@@ -68,7 +70,8 @@ public class Packet {
 		ackNr = ackNr + (raw_data[3] & 0xff) * 256;
 		option = raw_data[4] & 0xff;
 		length = raw_data[5] & 0xff;
-		data = new String(Arrays.copyOfRange(raw_data, 6, 6+length));
+		length = length + (raw_data[6] & 0xff) * 256;
+		data = new String(Arrays.copyOfRange(raw_data, 7, 7+length));
 	}
 		
 

@@ -3,11 +3,13 @@ import java.net.*;
 import java.util.*;
 
 public class ClientConnection extends Connection {
-
 	
-	public ClientConnection(String destIpIn, int destPortIn) {
+	
+	public ClientConnection(String destIpIn, int destPortIn, int sWindowIn) {
 		destIp = destIpIn;
 		destPort = destPortIn;
+		sWindowSize = sWindowIn;
+		isClient = true;
 		try {
 			listeningSocket = new DatagramSocket();
 		} catch (SocketException e) {
@@ -45,7 +47,21 @@ public class ClientConnection extends Connection {
 			return false;
 		}
 		else {
-			return true;
+			currentSendingPacket = new Packet( 
+					destIp,
+					destPort,
+					0, //seqNr
+					10, //ackNr
+					3,  // option = set sWindowSize
+					Integer.toString(sWindowSize));
+			sendPacket();
+			serverResponse = receivePacket(10000);
+			if( serverResponse.getOption() == 4 && Integer.parseInt(serverResponse.getData()) == sWindowSize) {
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 		
 	}
@@ -68,6 +84,7 @@ public class ClientConnection extends Connection {
 			Packet serverResponse = receivePacket(10000);
 			switch (serverResponse.getOption()) {
 			case 20: //file was created on server
+				System.out.println("File name transfered OK");
 				sendFileContent(numberOfRemaingPackets, fileReader, fileChecker);
 				System.out.println("Full file transfered ok");
 				fileReader.close();
@@ -97,28 +114,44 @@ public class ClientConnection extends Connection {
 		int resendAttempts = 5;
 		int temp = 0;
 		boolean resend = true;
-		System.out.println("File name transfered OK");
 		temp = fileChecker.nextLine().length();
 		while (numberOfRemaingPackets>0) {
-			dataSize = MAX_DATA - temp;
-			resend = true;
-			String dataLine = "";
-			while(fileReader.hasNextLine() 
-					&& dataSize > 0) {
-				dataLine = dataLine.concat(fileReader.nextLine() + "\n");
-				if (fileChecker.hasNextLine()) {
-					temp = fileChecker.nextLine().length();
-					dataSize = dataSize - temp;
+			currentSWindow = sWindowSize;
+			while(numberOfRemaingPackets>0 && currentSWindow>0) {
+				dataSize = MAX_DATA - temp;
+				resend = true;
+				String dataLine = "";
+				while(fileReader.hasNextLine() 
+						&& dataSize > 0) {
+					dataLine = dataLine.concat(fileReader.nextLine() + "\n");
+					if (fileChecker.hasNextLine()) {
+						temp = fileChecker.nextLine().length();
+						dataSize = dataSize - temp;
+					}
+					else break;
 				}
-				else break;
+				currentSendingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						11,  // option = file content
+						dataLine);
+				if (currentSWindow!=1) {
+					sendPacket();
+					numberOfRemaingPackets--;
+				}
+				currentSWindow--;
 			}
-			currentSendingPacket = new Packet( 
-					destIp,
-					destPort,
-					0, //seqNr
-					10, //ackNr
-					11,  // option = file content
-					dataLine);
+			if ( numberOfRemaingPackets == 0 && currentSWindow!=0) {
+				currentSendingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						12,  // option = full file sent (interrupt sWindow)
+						"interrupt");
+			}
 			while (resend == true && resendAttempts > 0) {
 				sendPacket();
 				Packet serverResponse = receivePacket(10000);
@@ -133,6 +166,9 @@ public class ClientConnection extends Connection {
 					System.out.println("There was an error when the server attempted to write to file, re-sending");
 					System.out.println(resendAttempts + " resend attempts remaining");
 					break;
+				case 24:
+					System.out.println("Interrupt accepted by server");
+					return;
 				case 50:
 					resendAttempts--;
 					System.out.println(resendAttempts + " resend attempts remaining");
@@ -148,6 +184,7 @@ public class ClientConnection extends Connection {
 	}
 	
 	private void sendCloseConnection() {
+		System.out.println("Closing connection with server");
 		currentSendingPacket = new Packet( 
 				destIp,
 				destPort,

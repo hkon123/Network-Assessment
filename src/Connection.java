@@ -6,12 +6,13 @@ import java.util.*;
 
 public abstract class Connection {
 	protected String destIp;
-	protected int destPort, currentSequenceNumber, currentAckNumber;
+	protected int destPort, currentSequenceNumber, currentAckNumber, sWindowSize, currentSWindow;;
 	protected DatagramSocket listeningSocket;
-	protected final int MAX_DATA = 200;//1024 - 10;
+	protected final int MAX_DATA = 900;//1024 - 10;
 	protected Packet currentSendingPacket;
 	protected List<Packet> packetList = new ArrayList<Packet>();
 	protected List<Integer> packetRef = new ArrayList<Integer>();
+	protected boolean isClient = false;
 	
 	protected Packet receivePacket(int timeout) {
 		Packet incomingPacket = new Packet();
@@ -37,9 +38,15 @@ public abstract class Connection {
 			e.printStackTrace();
 		} 
 		incomingPacket.stripPacket();
-		if(incomingPacket.getAckNr() != currentSequenceNumber + 1 ) {
+		if(incomingPacket.getAckNr() != currentSequenceNumber + 1  && isClient == true) {
 			//TODO: other side is not cought up, resend packet from packetref
 			System.out.println("Missing Data!!!");
+			int indexOfNextPacket = packetRef.indexOf(incomingPacket.getAckNr() - 1);
+			while (indexOfNextPacket < packetList.size()) {
+				resendPacket(packetList.get(indexOfNextPacket));
+				indexOfNextPacket++;
+			}
+			receivePacket(10000);
 		}
 		else {
 			currentAckNumber = incomingPacket.getSequenceNr() + 1;
@@ -62,6 +69,15 @@ public abstract class Connection {
 			listeningSocket.send(currentSendingPacket.getDatagram());
 			packetList.add(currentSendingPacket);
 			packetRef.add(currentSendingPacket.getSequenceNr());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	protected void resendPacket(Packet outgoingPacket) {
+		try {
+			listeningSocket.send(outgoingPacket.getDatagram());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

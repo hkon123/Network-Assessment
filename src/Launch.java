@@ -5,9 +5,9 @@ import java.util.Arrays;
 public class Launch {
 
 	public static void main(String[] args) throws Exception {
-		
+		System.out.println(System.getProperty("java.version"));
 		if (args[0].equals("Client")) {
-			new ClientConnection("localhost", 9876);
+			new ClientConnection("localhost", 9876, 5);
 		}
 		else if (args[0].equals("Server")){
 			DatagramSocket serverSocket;

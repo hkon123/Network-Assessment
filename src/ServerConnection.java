@@ -1,13 +1,15 @@
 import java.io.*;
 import java.net.DatagramSocket;
+import java.util.Random;
 
 public class ServerConnection extends Connection {
 	
-	boolean validConnection, once = false;
-	String outputPath = "../receiveData/";
+	boolean validConnection, randomPacketDrop = false;
+	String outputPath;// = "../receiveData/";
 	
 
-	public ServerConnection( Packet establishingPacket, DatagramSocket listeningSocketIn) {
+	public ServerConnection( Packet establishingPacket, DatagramSocket listeningSocketIn,
+			int debugLevelIn, boolean randomPacketDropIn, String outputPathIn) {
 		if (establishingPacket.getOption() != 1) {
 			validConnection = false;
 			System.out.println("Unsupported connection attempt detected!");
@@ -15,7 +17,9 @@ public class ServerConnection extends Connection {
 		}
 		else {
 			validConnection = true;
-			//sWindowSize = 5;  //Temp hardcoded value
+			randomPacketDrop = randomPacketDropIn;
+			debugLevel = debugLevelIn;
+			outputPath = outputPathIn;
 			listeningSocket = listeningSocketIn;
 			destIp = establishingPacket.getDestIp().toString().substring(1);
 			destPort = establishingPacket.getDestPort();
@@ -52,9 +56,10 @@ public class ServerConnection extends Connection {
 	}
 	
 	public void readyToRecieve() {
+		int maxTimeouts = 5;
 		Packet incomingData = receivePacket(10000);
 		currentSWindow = sWindowSize;
-		while (incomingData.getOption() != 50) { //option 50:TimeOut 
+		while (true) { //option 50:TimeOut 
 			switch(incomingData.getOption()) {
 			case 10: //option: fileName
 				//TODO: Add handling if filename is not received before data.
@@ -160,6 +165,18 @@ public class ServerConnection extends Connection {
 						"File overwritten");
 				sendPacket();
 				break;
+			case 50:
+				if (maxTimeouts > 0) {
+					System.out.println("Timeout when recieving packet\n"
+							+ "Listening for new packet\n"
+							+ (maxTimeouts -1) + " attempts remaining.");
+					maxTimeouts--;
+					break;
+				}
+				else {
+					System.out.println("Max timeout attempts, closing connection");
+					return;
+				}
 			case 51:
 				System.out.println("Closing connection with client ip: " + destIp);
 				return;
@@ -177,7 +194,13 @@ public class ServerConnection extends Connection {
 			default:
 				debugPrint("Unrecognized option");
 			}
-			
+			if (dropPackets == true) {
+				dropPackets = false;
+			}
+			else if(dropPackets == false && randomPacketDrop == true 
+					&& new Random().nextInt(100) > 90) {
+				dropPackets = true;
+			}
 			incomingData = receivePacket(10000);
 				
 		}
@@ -189,14 +212,6 @@ public class ServerConnection extends Connection {
 			currentSWindow = sWindowSize;
 		}
 		else {
-			if(currentSWindow == 3 && dropPackets == false && once == false) {
-				//TODO: make random
-				dropPackets = true;
-				once = true; // tamp value to be removed when random
-			}
-			else if (dropPackets == true) {
-				dropPackets = false;
-			}
 			currentSWindow--;
 		}
 	}

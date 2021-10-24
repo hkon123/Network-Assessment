@@ -5,10 +5,12 @@ import java.util.*;
 public class ClientConnection extends Connection {
 	
 	
-	public ClientConnection(String destIpIn, int destPortIn, int sWindowIn) {
+	public ClientConnection(String destIpIn, int destPortIn, int sWindowIn,
+			String filePath, int debugLevelIn) {
 		destIp = destIpIn;
 		destPort = destPortIn;
 		sWindowSize = sWindowIn;
+		debugLevel = debugLevelIn;
 		isClient = true;
 		try {
 			listeningSocket = new DatagramSocket();
@@ -19,7 +21,7 @@ public class ClientConnection extends Connection {
 		if (establishConnection()) {
 			System.out.println("Connection established!");
 			try {
-				transferFile("../sendData/test.txt");
+				transferFile(filePath);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -116,7 +118,10 @@ public class ClientConnection extends Connection {
 					}
 					break;
 				default:
-					debugPrint("Unrecognized option1");
+					debugPrint("Unrecognized option");
+					fileReader.close();
+					fileChecker.close();
+					return false;
 				}
 				serverResponse = receivePacket(10000);
 			}

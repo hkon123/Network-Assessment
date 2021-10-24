@@ -8,7 +8,8 @@ public abstract class Connection {
 	protected String destIp;
 	protected int destPort, currentSequenceNumber, 
 		currentAckNumber, sWindowSize, currentSWindow,
-		debugLevel = 2;
+		debugLevel,
+		maxDepth = 5;
 	protected DatagramSocket listeningSocket;
 	protected final int MAX_DATA = 900;//1024 - 10;
 	protected Packet currentSendingPacket;
@@ -32,9 +33,10 @@ public abstract class Connection {
 					destIp,
 					destPort,
 					0, //seqNr
-					10, //ackNr
+					currentSequenceNumber-currentSendingPacket.getLength() + 1, //ackNr
 					50,  // option = timeout
-					"timeout");
+					"");
+			incomingPacket.setRaw_data();
 		}catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -49,19 +51,35 @@ public abstract class Connection {
 				resendPacket(packetList.get(indexOfNextPacket+1));
 				indexOfNextPacket++;
 			}
-			currentSendingPacket = new Packet( 
-					destIp,
-					destPort,
-					0, //seqNr
-					10, //ackNr
-					13,  // option = interrupt and continue
-					"Interrupt and continue");
-			sendPacket();
-			receivePacket(10000);
+			if (packetList.get(indexOfNextPacket).getOption() != 13 && packetList.get(indexOfNextPacket).getOption() != 12) {
+				currentSendingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						13,  // option = interrupt and continue
+						"Interrupt and continue");
+				sendPacket();
+			}
+			if (maxDepth-- == 0) {
+				debugPrint("Max resend attempts reached, closing connection");
+				incomingPacket = new Packet( 
+						destIp,
+						destPort,
+						0, //seqNr
+						10, //ackNr
+						-1,  // option = None
+						"Ignore incoming packet");
+			}
+			else {
+				receivePacket(10000);
+				maxDepth++;
+			}
 		}
 		else if ((isClient == false &&
-				incomingPacket.getSequenceNr() > currentAckNumber + incomingPacket.getLength())
-				|| dropPackets == true) {
+				incomingPacket.getSequenceNr() != currentAckNumber + incomingPacket.getLength() - 1 
+				&& incomingPacket.getOption() != 50)
+				|| (dropPackets == true && incomingPacket.getOption() == 11)) {
 			printAckAndSn("Dropping:  ", incomingPacket);
 			incomingPacket = new Packet( 
 					destIp,

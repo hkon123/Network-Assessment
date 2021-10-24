@@ -44,7 +44,7 @@ public class ClientConnection extends Connection {
 				1,  // option = hello
 				"Hello");
 		sendPacket();
-		Packet serverResponse = receivePacket(10000);
+		Packet serverResponse = receivePacket(timeoutSize);
 		if( serverResponse.getOption() != 2 ) {
 			return false;
 		}
@@ -57,7 +57,7 @@ public class ClientConnection extends Connection {
 					3,  // option = set sWindowSize
 					Integer.toString(sWindowSize));
 			sendPacket();
-			serverResponse = receivePacket(10000);
+			serverResponse = receivePacket(timeoutSize);
 			if( serverResponse.getOption() == 4 && Integer.parseInt(serverResponse.getData()) == sWindowSize) {
 				return true;
 			}
@@ -83,7 +83,7 @@ public class ClientConnection extends Connection {
 					10,  // option = filename
 					fileName);
 			sendPacket();
-			Packet serverResponse = receivePacket(10000);
+			Packet serverResponse = receivePacket(timeoutSize);
 			while (true) {
 				switch (serverResponse.getOption()) {
 				case 20: //file was created on server
@@ -123,7 +123,7 @@ public class ClientConnection extends Connection {
 					fileChecker.close();
 					return false;
 				}
-				serverResponse = receivePacket(10000);
+				serverResponse = receivePacket(timeoutSize);
 			}
 		}
 		else {
@@ -177,7 +177,7 @@ public class ClientConnection extends Connection {
 			}
 			while (resend == true && resendAttempts > 0) {
 				sendPacket();
-				Packet serverResponse = receivePacket(10000);
+				Packet serverResponse = receivePacket(timeoutSize);
 				switch (serverResponse.getOption()) {
 				case 22:
 					debugPrint("data line transfered OK");

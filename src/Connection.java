@@ -11,7 +11,7 @@ public abstract class Connection {
 		debugLevel,
 		maxDepth = 5;
 	protected DatagramSocket listeningSocket;
-	protected final int MAX_DATA = 900;//1024 - 10;
+	protected final int MAX_DATA = 900, timeoutSize = 5000;//1024 - 10;
 	protected Packet currentSendingPacket;
 	protected List<Packet> packetList = new ArrayList<Packet>();
 	protected List<Integer> packetRef = new ArrayList<Integer>();
@@ -72,7 +72,7 @@ public abstract class Connection {
 						"Ignore incoming packet");
 			}
 			else {
-				receivePacket(10000);
+				receivePacket(timeoutSize);
 				maxDepth++;
 			}
 		}
@@ -88,6 +88,9 @@ public abstract class Connection {
 					10, //ackNr
 					52,  // option = Ignore incoming packet
 					"Ignore incoming packet");
+			if (dropPackets == true) {
+				currentSWindow++;
+			}
 		}
 		else {
 			//currentAckNumber = incomingPacket.getSequenceNr() + 1;

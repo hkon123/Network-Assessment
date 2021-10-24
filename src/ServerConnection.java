@@ -33,7 +33,7 @@ public class ServerConnection extends Connection {
 					2,  // option = Established
 					"Established");
 			sendPacket();
-			Packet clientResponse = receivePacket(10000);
+			Packet clientResponse = receivePacket(timeoutSize);
 			if (clientResponse.getOption() == 3) {
 				sWindowSize = Integer.parseInt(clientResponse.getData());
 				currentSendingPacket = new Packet( 
@@ -57,7 +57,7 @@ public class ServerConnection extends Connection {
 	
 	public void readyToRecieve() {
 		int maxTimeouts = 5;
-		Packet incomingData = receivePacket(10000);
+		Packet incomingData = receivePacket(timeoutSize);
 		currentSWindow = sWindowSize;
 		while (true) { //option 50:TimeOut 
 			switch(incomingData.getOption()) {
@@ -167,7 +167,7 @@ public class ServerConnection extends Connection {
 				break;
 			case 50:
 				if (maxTimeouts > 0) {
-					System.out.println("Timeout when recieving packet\n"
+					System.out.println(""
 							+ "Listening for new packet\n"
 							+ (maxTimeouts -1) + " attempts remaining.");
 					maxTimeouts--;
@@ -201,7 +201,7 @@ public class ServerConnection extends Connection {
 					&& new Random().nextInt(100) > 90) {
 				dropPackets = true;
 			}
-			incomingData = receivePacket(10000);
+			incomingData = receivePacket(timeoutSize);
 				
 		}
 	}

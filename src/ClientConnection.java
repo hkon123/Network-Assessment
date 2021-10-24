@@ -2,9 +2,23 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+/**Class used to setup and contain a connection from a client
+ * contains functionality for transferring a file to server
+ * and parsing response messages
+ * @author Håkon
+ *
+ */
 public class ClientConnection extends Connection {
 	
 	
+	/**Constructs a client connection and attempts to initiate connection with a
+	 * server.
+	 * @param destIpIn Server IP
+	 * @param destPortIn Server port
+	 * @param sWindowIn Size of the sliding window
+	 * @param filePath Path to file to be transfered
+	 * @param debugLevelIn Level of debug printouts
+	 */
 	public ClientConnection(String destIpIn, int destPortIn, int sWindowIn,
 			String filePath, int debugLevelIn) {
 		destIp = destIpIn;
@@ -15,7 +29,6 @@ public class ClientConnection extends Connection {
 		try {
 			listeningSocket = new DatagramSocket();
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if (establishConnection()) {
@@ -23,7 +36,6 @@ public class ClientConnection extends Connection {
 			try {
 				transferFile(filePath);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			sendCloseConnection();
@@ -35,12 +47,16 @@ public class ClientConnection extends Connection {
 		
 	}
 	
+	/**Method for initiating a connection with an idle server.
+	 * @return <b>true</b> if the connection is established<br>
+	 * <b>false</b> if the connection is rejected.
+	 */
 	private boolean establishConnection() {
 		currentSendingPacket = new Packet( 
 				destIp,
 				destPort,
-				0, //seqNr
-				10, //ackNr
+				0, //seqNr Defines the start point for the client sequence numbers
+				10, //ackNr Defines the start point for the server sequence numbers
 				1,  // option = hello
 				"Hello");
 		sendPacket();
@@ -52,8 +68,8 @@ public class ClientConnection extends Connection {
 			currentSendingPacket = new Packet( 
 					destIp,
 					destPort,
-					0, //seqNr
-					10, //ackNr
+					0, //seqNr dummy value changed during sendPacket()
+					10, //ackNr dummy value changed during sendPacket()
 					3,  // option = set sWindowSize
 					Integer.toString(sWindowSize));
 			sendPacket();
@@ -68,18 +84,28 @@ public class ClientConnection extends Connection {
 		
 	}
 	
+	/**Method for initiating file transfer.
+	 * Will first send the name of the file to be transfered, and if the file can be created
+	 * on the server it will proceed with sending the file content.
+	 * If the file already exists in the server, the user will be prompted to decide
+	 * whether or not to overwrite it.
+	 * @param filePath Path to file to be transfered
+	 * @return <b>true</b> if the file was successfully transferred<br>
+	 * <b>false</b> if the file was not successfully transferred
+	 * @throws Exception
+	 */
 	private boolean transferFile(String filePath) throws Exception {
 		File inputFile = new File(filePath);
 		int numberOfRemaingPackets = ((int) inputFile.length() + MAX_DATA - 1)/MAX_DATA; //Rounding up
 		if (inputFile.exists()) {
-			Scanner fileReader = new Scanner(inputFile);
-			Scanner fileChecker = new Scanner(inputFile);
+			Scanner fileReader = new Scanner(inputFile); //reader passes input into the packet to be sent
+			Scanner fileChecker = new Scanner(inputFile); //checker verifies that the next line will not make the packet data overflow
 			String fileName = filePath.split("/")[filePath.split("/").length-1];
 			currentSendingPacket = new Packet( 
 					destIp,
 					destPort,
-					0, //seqNr
-					10, //ackNr
+					0, //seqNr dummy value changed during sendPacket()
+					10, //ackNr dummy value changed during sendPacket()
 					10,  // option = filename
 					fileName);
 			sendPacket();
@@ -108,8 +134,8 @@ public class ClientConnection extends Connection {
 							currentSendingPacket = new Packet( 
 									destIp,
 									destPort,
-									0, //seqNr
-									10, //ackNr
+									0, //seqNr dummy value changed during sendPacket()
+									10, //ackNr dummy value changed during sendPacket()
 									14,  // option = overwrite file
 									"Overwrite file");
 							sendPacket();

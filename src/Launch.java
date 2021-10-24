@@ -6,11 +6,11 @@ public class Launch {
 
 	public static void main(String[] args) throws Exception {
 		System.out.println(System.getProperty("java.version"));
-		if (args[0].equals("Client")) {
+		if (args[0].equals("Client") || args[0].equals("client")) {
 			new ClientConnection(args[1], Integer.parseInt(args[2]), Integer.parseInt(args[4]), 
 					args[3], Integer.parseInt(args[5]));
 		}
-		else if (args[0].equals("Server")){
+		else if (args[0].equals("Server") || args[0].equals("server")){
 			DatagramSocket serverSocket;
 			
 			
@@ -29,7 +29,7 @@ public class Launch {
 						args[1]);
 			}
 		}
-		else if (args[0].equals("help")) {
+		else if (args[0].equals("help") || args[0].equals("Help") || args[0].equals("h")) {
 			System.out.println("------Simple File Transfer program-------\n");
 			System.out.println("To setup a server use use the following parameters:");
 			System.out.println("java Launch Server [path to receive folder] "
@@ -46,7 +46,7 @@ public class Launch {
 			System.out.println("*Options:*");
 			System.out.println("[server ip]: Ip adress of server you are trying to connect to (xxx.xxx.xxx.xxx/hostname)");
 			System.out.println("[server port]: Port number of the server you are trying to connect to");
-			System.out.println("[path to file]: Relative path to the file to be sent");
+			System.out.println("[path to file]: Relative path to the file to be sent including the file name");
 			System.out.println("[sliding window size]: size of the sliding window (1->X)");
 			System.out.println("[debug level]: Level of debug prints: 1=minimal, 2=descriptive, 3=detailed packet info");
 			System.out.println("");

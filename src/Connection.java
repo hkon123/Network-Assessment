@@ -71,7 +71,7 @@ public abstract class Connection {
 		 * ie. ackNr should be the current seqNr+1
 		 */
 		if(incomingPacket.getAckNr() != currentSequenceNumber + 1  && isClient == true) { 
-			//TODO: other side is not cought up, resend packet from packetref
+			//other side is not caught up, re-send packet from packetref
 			debugPrint("Packet drop detected, resending lost packets");
 			int indexOfNextPacket = packetRef.indexOf(incomingPacket.getAckNr() - 1); //find the index of the last packet received by the server
 			while (indexOfNextPacket < packetList.size() - 1) { //loop through all packets after the last received by server
@@ -82,11 +82,12 @@ public abstract class Connection {
 			 * After all dropped packets are re-sent a final package that interrupts
 			 * the servers sliding window is sent.
 			 * This is done so the client and the server are synched up
-			 * If the last packet send during the re-send loop was an interrupt, 
+			 * If the last packet sent during the re-send loop was an interrupt, 
 			 * there is no need to send another one.
-			 * The If condition is there in case the interrupting packet is dropped.
+			 * The If condition is there in case the interrupting packet is dropped,
+			 * or if the sliding window size is 1. 
 			 */
-			if (packetList.get(indexOfNextPacket).getOption() != 13 && packetList.get(indexOfNextPacket).getOption() != 12) {
+			if (packetList.get(indexOfNextPacket).getOption() != 13 && packetList.get(indexOfNextPacket).getOption() != 12 && sWindowSize != 1) {
 				currentSendingPacket = new Packet( 
 						destIp,
 						destPort,
@@ -169,7 +170,6 @@ public abstract class Connection {
 			packetList.add(currentSendingPacket);
 			packetRef.add(currentSendingPacket.getSequenceNr());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -182,7 +182,6 @@ public abstract class Connection {
 			printAckAndSn("reSending: ", outgoingPacket);
 			listeningSocket.send(outgoingPacket.getDatagram());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

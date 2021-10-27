@@ -51,7 +51,6 @@ public class Packet {
 		try {
 			destIp = InetAddress.getByName(destIpIn);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		destPort = destPortIn;

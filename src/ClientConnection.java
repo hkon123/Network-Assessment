@@ -158,6 +158,12 @@ public class ClientConnection extends Connection {
 		}
 	}
 
+	/**Method for transferring the content of a file from the client to a server.
+	 * Handles the sliding window functionality Client side.
+	 * @param numberOfRemaingPackets Total number of packets required to transfer the file
+	 * @param fileReader <b>Scanner</b> object used to read file content.
+	 * @param fileChecker <b>Scanner</b> object used to check the size of the next line.
+	 */
 	private void sendFileContent(int numberOfRemaingPackets, Scanner fileReader, Scanner fileChecker) {
 		int dataSize;
 		int resendAttempts = 5;
@@ -170,7 +176,7 @@ public class ClientConnection extends Connection {
 				dataSize = MAX_DATA - temp;
 				resend = true;
 				String dataLine = "";
-				while(fileReader.hasNextLine() 
+				while(fileReader.hasNextLine() //loop that creates the data field for each packet.
 						&& dataSize > 0) {
 					dataLine = dataLine.concat(fileReader.nextLine() + "\n");
 					if (fileChecker.hasNextLine()) {
@@ -182,8 +188,8 @@ public class ClientConnection extends Connection {
 				currentSendingPacket = new Packet( 
 						destIp,
 						destPort,
-						0, //seqNr
-						10, //ackNr
+						0, //seqNr dummy value changed during sendPacket()
+						10, //ackNr dummy value changed during sendPacket()
 						11,  // option = file content
 						dataLine);
 				if (currentSWindow!=1) {
@@ -192,12 +198,12 @@ public class ClientConnection extends Connection {
 				}
 				currentSWindow--;
 			}
-			if ( numberOfRemaingPackets == 0 && currentSWindow!=0) {
+			if ( numberOfRemaingPackets == 0 && currentSWindow!=0) { //send an interrupt to the server if full file is sent, while inside a sliding window
 				currentSendingPacket = new Packet( 
 						destIp,
 						destPort,
-						0, //seqNr
-						10, //ackNr
+						0, //seqNr dummy value changed during sendPacket()
+						10, //ackNr dummy value changed during sendPacket()
 						12,  // option = full file sent (interrupt sWindow)
 						"interrupt");
 			}
@@ -205,20 +211,20 @@ public class ClientConnection extends Connection {
 				sendPacket();
 				Packet serverResponse = receivePacket(timeoutSize);
 				switch (serverResponse.getOption()) {
-				case 22:
+				case 22: //option: File written to OP
 					debugPrint("data line transfered OK");
 					numberOfRemaingPackets--;
 					resend = false;
 					break;
-				case 23:
+				case 23: //option: file write error
 					resendAttempts--;
 					debugPrint("There was an error when the server attempted to write to file, re-sending");
 					debugPrint(resendAttempts + " resend attempts remaining");
 					break;
-				case 24:
+				case 24: //option: interrupt was accepted by the server
 					debugPrint("Interrupt accepted by server");
 					return;
-				case 50:
+				case 50: //option: timeout (local)
 					resendAttempts--;
 					debugPrint(resendAttempts + " resend attempts remaining");
 					break;
@@ -232,6 +238,9 @@ public class ClientConnection extends Connection {
 		}
 	}
 	
+	/**Call this method to send a packet to the server containing the "close connection" option.
+	 * 
+	 */
 	private void sendCloseConnection() {
 		System.out.println("Closing connection with server");
 		currentSendingPacket = new Packet( 

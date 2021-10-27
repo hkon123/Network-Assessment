@@ -52,7 +52,7 @@ public abstract class Connection {
 					0, //seqNr  dummy value that wont be processed
 					/**
 					 * ackNr is set to the seqNr of last sent packet.
-					 * This enables logic so the lest sent packet can be resent in case of a timeout.
+					 * This enables logic so the last sent packet can be resent in case of a timeout.
 					 */
 					currentSequenceNumber-currentSendingPacket.getLength() + 1, //ackNr 
 					50,  // option = timeout

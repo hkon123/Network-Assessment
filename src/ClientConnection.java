@@ -5,7 +5,7 @@ import java.util.*;
 /**Class used to setup and contain a connection from a client
  * contains functionality for transferring a file to server
  * and parsing response messages
- * @author Håkon
+ * @author Anonymous
  *
  */
 public class ClientConnection extends Connection {

@@ -3,7 +3,7 @@ import java.net.*;
 import java.util.Arrays;
 
 /**Class for setting up and configuring either a server or client side connection.
- * @author hkonh
+ * @author Anonymous
  *
  */
 public class Launch {

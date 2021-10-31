@@ -4,7 +4,7 @@ import java.util.Random;
 
 /**Use this class to hold the server side of the connection. Extends the <b>Connection</b> class.
  * The class contains functionality for parsing incoming messages and writing data received over UDP to a file.
- * @author hkonh
+ * @author Anonymous
  *
  */
 public class ServerConnection extends Connection {

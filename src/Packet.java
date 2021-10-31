@@ -14,7 +14,7 @@ import java.util.Arrays;
  * 
  */
 /**
- * @author Håkon
+ * @author Anonymous
  *
  */
 public class Packet {

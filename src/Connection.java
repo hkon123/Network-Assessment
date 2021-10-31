@@ -7,7 +7,7 @@ import java.util.*;
 /**The Connection class is an abstract class containing 
  * all the functionality that both a Client and a Server use.
  * Extend this class to enable functionality.z
- * @author Håkon
+ * @author Anonymous
  * 
  */
 public abstract class Connection {
@@ -160,8 +160,9 @@ public abstract class Connection {
 			currentSendingPacket.setAckNr(currentAckNumber);
 		}
 		else {
-			currentSequenceNumber = currentSendingPacket.getSequenceNr();
-			currentAckNumber = currentSendingPacket.getAckNr();
+			currentSequenceNumber = currentSendingPacket.getSequenceNr() + currentSendingPacket.getLength();
+			currentAckNumber = currentSendingPacket.getAckNr() + 1;
+			currentSendingPacket.setSequenceNr(currentSequenceNumber);
 		}
 		try {
 			currentSendingPacket.setRaw_data();

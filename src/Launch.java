@@ -10,7 +10,7 @@ public class Launch {
 
 	public static void main(String[] args) throws Exception {
 		//Pre-amble printout that verifies the user is running the correct JRE
-		System.out.println("\nYou are runing java version:" + System.getProperty("java.version")
+		System.out.println("\nYou are running java version:" + System.getProperty("java.version")
 		+ " This program was written for and tested with java version 11.0.6\n");
 		try {
 			if (args[0].equals("Client") || args[0].equals("client")) { // if the user specifies client, setup a client
@@ -21,7 +21,7 @@ public class Launch {
 				DatagramSocket serverSocket;
 				
 				
-				serverSocket = new DatagramSocket(9876);
+				serverSocket = new DatagramSocket(Integer.parseInt(args[1]));
 				
 				while(true) {
 					serverSocket.setSoTimeout(0);
@@ -31,17 +31,18 @@ public class Launch {
 					incomingPacket.stripPacket();
 					
 					new ServerConnection(incomingPacket, serverSocket,
-							Integer.parseInt(args[2]),
-							Boolean.valueOf(args[3]),
-							args[1]);
+							Integer.parseInt(args[3]),
+							Boolean.valueOf(args[4]),
+							args[2]);
 				}
 			}
 			else if (args[0].equals("help") || args[0].equals("Help") || args[0].equals("h")) { // use command help for a detailed description of inputs and options
 				System.out.println("------Simple File Transfer program-------\n");
 				System.out.println("To setup a server use use the following parameters:");
-				System.out.println("java Launch Server [path to receive folder] "
+				System.out.println("java Launch Server [listening port] [path to receive folder] "
 						+ "[debug level] [enable packet drops]");
 				System.out.println("*Options:*");
+				System.out.println("[listening port]: the port used to listen for incoming connections. ");
 				System.out.println("[path to receive folder]: Relative path to the folder "
 						+ "where received files wil be saved. Use <\"\"> to use current folder. ");
 				System.out.println("[debug level]: Level of debug prints: 1=minimal, 2=descriptive, 3=detailed packet info");

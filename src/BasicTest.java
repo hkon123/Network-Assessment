@@ -25,7 +25,7 @@ class BasicTest {
 	}
 
 	@Test
-	void test() {
+	void test1() {
 		Packet testPacket = new Packet( 
 				"10.4.1.4",
 				6969,
@@ -37,6 +37,20 @@ class BasicTest {
 		testPacket.setSequenceNr(0);
 		testPacket.stripPacket();
 		assertEquals(testPacket.getSequenceNr(), 10);
+	}
+	@Test
+	void test2() {
+		Packet testPacket = new Packet( 
+				"10.4.1.4",
+				6969,
+				10, //seq nr
+				100, //ackNr 
+				1,  // option = timeout
+				"");
+		testPacket.setRaw_data();
+		testPacket.setSequenceNr(0);
+		testPacket.stripPacket();
+		assertEquals(testPacket.getSequenceNr(), 1);
 	}
 
 }
